@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Điểm - Hệ thống QLSV</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h3>🎓 QLSV</h3>
+                <p>Quản lý Sinh viên</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="./dashboard.html"><span></span> Dashboard</a></li>
+                <li><a href="./students.html"><span></span> Quản lý Sinh viên</a></li>
+                <li><a href="./grades.html" class="active" style="font-weight: bold;"><span></span> Quản lý Điểm</a></li>
+                <li><a href="./announcements.html"><span></span> Thông báo</a></li>
+                <li><a href="./schedules.html"><span></span> Thời khóa biểu</a></li>
+                <li><a href="./accounts.html"><span></span> Quản lý Tài khoản</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+                        ☰
+                    </button>
+                    <h2>Quản lý Điểm</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span class="user-name" id="userName">Admin</span>
+                    </div>
+                    <button class="btn-logout" onclick="handleLogout()">Đăng xuất</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Bảng điểm</h3>
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Tìm kiếm theo mã SV hoặc môn học...">
+                            <button class="btn btn-primary" onclick="openAddModal()"> Nhập điểm</button>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã SV</th>
+                                <th>Tên sinh viên</th>
+                                <th>Môn học</th>
+                                <th>Điểm GK</th>
+                                <th>Điểm CK</th>
+                                <th>Điểm TB</th>
+                                <th>Xếp loại</th>
+                                <th>Học kỳ</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gradesTableBody">
+                            <tr><td colspan="9" class="text-center">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- GPA Summary -->
+                <div class="grade-summary">
+                    <h4>📊 Thống kê điểm</h4>
+                    <div class="cards-grid">
+                        <div class="card card-primary">
+                            <div class="card-title">Điểm trung bình chung</div>
+                            <div class="card-value" id="avgGPA">0.0</div>
+                        </div>
+                        <div class="card card-success">
+                            <div class="card-title">Số môn đạt</div>
+                            <div class="card-value" id="passedSubjects">0</div>
+                        </div>
+                        <div class="card card-danger">
+                            <div class="card-title">Số môn chưa đạt</div>
+                            <div class="card-value" id="failedSubjects">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nhập điểm -->
+    <div id="gradeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Nhập điểm</h3>
+                <button class="close-modal" onclick="closeGradeModal()">×</button>
+            </div>
+
+            <form id="gradeForm">
+                <input type="hidden" id="gradeIdHidden">
+                <input type="hidden" id="isEditMode" value="false">
+
+                <div class="form-group">
+                    <label for="studentId">Mã sinh viên *</label>
+                    <select id="studentId" required>
+                        <option value="">-- Chọn sinh viên --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Môn học *</label>
+                    <input type="text" id="subject" placeholder="VD: Lập trình Web" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="midterm">Điểm giữa kỳ (0-10) *</label>
+                    <input type="number" id="midterm" min="0" max="10" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="final">Điểm cuối kỳ (0-10) *</label>
+                    <input type="number" id="final" min="0" max="10" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="semester">Học kỳ *</label>
+                    <select id="semester" required>
+                        <option value="1">Học kỳ 1</option>
+                        <option value="2">Học kỳ 2</option>
+                        <option value="3">Học kỳ 3</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="yearInput">Năm học *</label>
+                    <input type="text" id="yearInput" placeholder="VD: 2024" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeGradeModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        if (!Auth.requireAuth()) window.location.href = '../index.html';
+
+        let allGrades = [];
+        let currentEditId = null;
+
+        window.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadGrades();
+            loadStudentOptions();
+            document.getElementById('searchInput').addEventListener('input', Utils.debounce(handleSearch, 300));
+        });
+
+        function loadUserInfo() {
+            const user = Auth.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.fullName;
+                document.getElementById('userAvatar').textContent = user.fullName.charAt(0).toUpperCase();
+            }
+        }
+
+        function loadGrades() {
+            allGrades = Storage.getGrades() || [];
+            renderGrades(allGrades);
+            updateStatistics();
+        }
+
+        function renderGrades(grades) {
+            const tbody = document.getElementById('gradesTableBody');
+            
+            if (grades.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">Chưa có điểm nào</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = grades.map(grade => {
+                const student = Storage.getStudentById(grade.studentId);
+                const studentName = student ? student.fullName : 'N/A';
+                const classification = Utils.getGradeClassification(grade.average);
+                
+                return `
+                    <tr>
+                        <td>${grade.studentId}</td>
+                        <td>${studentName}</td>
+                        <td>${grade.subject}</td>
+                        <td>${grade.midterm}</td>
+                        <td>${grade.final}</td>
+                        <td><strong>${grade.average}</strong></td>
+                        <td><span class="badge badge-info">${classification}</span></td>
+                        <td>HK${grade.semester} - ${grade.year}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-warning" onclick="openEditModal('${grade.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteGrade('${grade.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateStatistics() {
+            const grades = Storage.getGrades() || [];
+            const gpa = Utils.calculateGPA(grades);
+            document.getElementById('avgGPA').textContent = gpa;
+            
+            const passed = grades.filter(g => parseFloat(g.average) >= 5).length;
+            const failed = grades.filter(g => parseFloat(g.average) < 5).length;
+            
+            document.getElementById('passedSubjects').textContent = passed;
+            document.getElementById('failedSubjects').textContent = failed;
+        }
+
+        function loadStudentOptions() {
+            const students = Storage.getStudents() || [];
+            const select = document.getElementById('studentId');
+            
+            select.innerHTML = '<option value="">-- Chọn sinh viên --</option>' +
+                students.map(s => `<option value="${s.id}">${s.id} - ${s.fullName}</option>`).join('');
+        }
+
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const filteredGrades = Utils.searchArray(allGrades, searchTerm, ['studentId', 'subject']);
+            renderGrades(filteredGrades);
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Nhập điểm';
+            document.getElementById('isEditMode').value = 'false';
+            Utils.resetForm('gradeForm');
+            Utils.openModal('gradeModal');
+        }
+
+        function openEditModal(gradeId) {
+            const grades = Storage.getGrades() || [];
+            const grade = grades.find(g => g.id === gradeId);
+            
+            if (!grade) {
+                Utils.showAlert('Không tìm thấy điểm!', 'error');
+                return;
+            }
+
+            currentEditId = gradeId;
+            document.getElementById('modalTitle').textContent = 'Sửa điểm';
+            document.getElementById('isEditMode').value = 'true';
+            document.getElementById('gradeIdHidden').value = gradeId;
+            
+            document.getElementById('studentId').value = grade.studentId;
+            document.getElementById('subject').value = grade.subject;
+            document.getElementById('midterm').value = grade.midterm;
+            document.getElementById('final').value = grade.final;
+            document.getElementById('semester').value = grade.semester;
+            document.getElementById('yearInput').value = grade.year;
+
+            Utils.openModal('gradeModal');
+        }
+
+        function closeGradeModal() {
+            Utils.closeModal('gradeModal');
+            Utils.resetForm('gradeForm');
+            currentEditId = null;
+        }
+
+        document.getElementById('gradeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const isEdit = document.getElementById('isEditMode').value === 'true';
+            
+            const midterm = parseFloat(document.getElementById('midterm').value);
+            const final = parseFloat(document.getElementById('final').value);
+            const average = Utils.calculateAverage(midterm, final);
+
+            const formData = {
+                id: isEdit ? currentEditId : Storage.generateId('D'),
+                studentId: document.getElementById('studentId').value,
+                subject: document.getElementById('subject').value.trim(),
+                midterm: midterm,
+                final: final,
+                average: parseFloat(average),
+                semester: document.getElementById('semester').value,
+                year: document.getElementById('yearInput').value.trim()
+            };
+
+            const validation = Validation.validateGradeForm(formData);
+            if (!validation.isValid) {
+                Utils.showAlert(validation.errors.join('<br>'), 'error');
+                return;
+            }
+
+            if (isEdit) {
+                Storage.updateGrade(currentEditId, formData);
+                Utils.showAlert('Cập nhật điểm thành công!', 'success');
+            } else {
+                Storage.addGrade(formData);
+                Utils.showAlert('Thêm điểm thành công!', 'success');
+            }
+
+            closeGradeModal();
+            loadGrades();
+        });
+
+        function deleteGrade(gradeId) {
+            if (!Utils.confirm('Bạn có chắc muốn xóa điểm này?')) return;
+            
+            Storage.deleteGrade(gradeId);
+            Utils.showAlert('Đã xóa điểm!', 'success');
+            loadGrades();
+        }
+
+        function handleLogout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) Auth.logout();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('gradeModal');
+            if (event.target === modal) closeGradeModal();
+        };
+
+        // Toggle Sidebar for Mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking overlay
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            toggleSidebar();
+        });
+
+        // Close sidebar when clicking a menu item on mobile
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.addEventListener('click', function() {
+                    const sidebar = document.querySelector('.sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            });
+        }
+    </script>
+</body>
+</html>

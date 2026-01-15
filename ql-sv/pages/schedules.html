@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thời khóa biểu - Hệ thống QLSV</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h3>🎓 QLSV</h3>
+                <p>Quản lý Sinh viên</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="./dashboard.html"><span></span> Dashboard</a></li>
+                <li><a href="./students.html"><span></span> Quản lý Sinh viên</a></li>
+                <li><a href="./grades.html"><span></span> Quản lý Điểm</a></li>
+                <li><a href="./announcements.html"><span></span> Thông báo</a></li>
+                <li><a href="./schedules.html" class="active" style="font-weight: bold;"><span></span> Thời khóa biểu</a></li>
+                <li><a href="./accounts.html"><span></span> Quản lý Tài khoản</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+                        ☰
+                    </button>
+                    <h2>Thời khóa biểu</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span class="user-name" id="userName">Admin</span>
+                    </div>
+                    <button class="btn-logout" onclick="handleLogout()">Đăng xuất</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Schedule Table -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Lịch học trong tuần</h3>
+                        <button class="btn btn-primary" onclick="openAddModal()"> Thêm lịch học</button>
+                    </div>
+
+                    <div class="schedule-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Thứ</th>
+                                    <th>Lớp</th>
+                                    <th>Môn học</th>
+                                    <th>Giảng viên</th>
+                                    <th>Phòng</th>
+                                    <th>Thời gian</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleTableBody">
+                                <tr><td colspan="7" class="text-center">Đang tải...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Schedule by Day -->
+                <div class="table-container mt-3">
+                    <div class="table-header">
+                        <h3>Lịch học theo thứ</h3>
+                        <select id="dayFilter" class="btn" style="padding: 8px 15px; cursor: pointer;">
+                            <option value="">Tất cả</option>
+                            <option value="Thứ 2">Thứ 2</option>
+                            <option value="Thứ 3">Thứ 3</option>
+                            <option value="Thứ 4">Thứ 4</option>
+                            <option value="Thứ 5">Thứ 5</option>
+                            <option value="Thứ 6">Thứ 6</option>
+                            <option value="Thứ 7">Thứ 7</option>
+                        </select>
+                    </div>
+
+                    <div id="scheduleByDay" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                        <!-- Lịch học sẽ được load ở đây -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Lịch học -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm lịch học</h3>
+                <button class="close-modal" onclick="closeScheduleModal()">×</button>
+            </div>
+
+            <form id="scheduleForm">
+                <input type="hidden" id="scheduleIdHidden">
+                <input type="hidden" id="isEditMode" value="false">
+
+                <div class="form-group">
+                    <label for="class">Lớp *</label>
+                    <input type="text" id="class" placeholder="VD: IT01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Môn học *</label>
+                    <input type="text" id="subject" placeholder="VD: Lập trình Web" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="teacher">Giảng viên *</label>
+                    <input type="text" id="teacher" placeholder="VD: TS. Nguyễn Văn A" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="room">Phòng học *</label>
+                    <input type="text" id="room" placeholder="VD: A101" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="day">Thứ *</label>
+                    <select id="day" required>
+                        <option value="">-- Chọn thứ --</option>
+                        <option value="Thứ 2">Thứ 2</option>
+                        <option value="Thứ 3">Thứ 3</option>
+                        <option value="Thứ 4">Thứ 4</option>
+                        <option value="Thứ 5">Thứ 5</option>
+                        <option value="Thứ 6">Thứ 6</option>
+                        <option value="Thứ 7">Thứ 7</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="startTime">Giờ bắt đầu *</label>
+                    <input type="time" id="startTime" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="endTime">Giờ kết thúc *</label>
+                    <input type="time" id="endTime" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        if (!Auth.requireAuth()) window.location.href = '../index.html';
+
+        let allSchedules = [];
+        let currentEditId = null;
+
+        window.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadSchedules();
+            
+            document.getElementById('dayFilter').addEventListener('change', function() {
+                renderScheduleByDay(this.value);
+            });
+        });
+
+        function loadUserInfo() {
+            const user = Auth.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.fullName;
+                document.getElementById('userAvatar').textContent = user.fullName.charAt(0).toUpperCase();
+            }
+        }
+
+        function loadSchedules() {
+            allSchedules = Storage.getSchedules() || [];
+            renderScheduleTable(allSchedules);
+            renderScheduleByDay('');
+        }
+
+        function renderScheduleTable(schedules) {
+            const tbody = document.getElementById('scheduleTableBody');
+            
+            if (schedules.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Chưa có lịch học nào</td></tr>';
+                return;
+            }
+
+            // Sắp xếp theo thứ
+            const dayOrder = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+            const sorted = [...schedules].sort((a, b) => {
+                const dayCompare = dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
+                if (dayCompare !== 0) return dayCompare;
+                return a.startTime.localeCompare(b.startTime);
+            });
+
+            tbody.innerHTML = sorted.map(schedule => `
+                <tr>
+                    <td><strong>${schedule.day}</strong></td>
+                    <td>${schedule.class}</td>
+                    <td>${schedule.subject}</td>
+                    <td>${schedule.teacher}</td>
+                    <td>${schedule.room}</td>
+                    <td>${schedule.startTime} - ${schedule.endTime}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning" onclick="openEditModal('${schedule.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteSchedule('${schedule.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderScheduleByDay(filterDay) {
+            const container = document.getElementById('scheduleByDay');
+            let schedules = allSchedules;
+
+            if (filterDay) {
+                schedules = schedules.filter(s => s.day === filterDay);
+            }
+
+            if (schedules.length === 0) {
+                container.innerHTML = '<div class="empty-state">Không có lịch học</div>';
+                return;
+            }
+
+            // Nhóm theo thứ
+            const groupedByDay = {};
+            schedules.forEach(schedule => {
+                if (!groupedByDay[schedule.day]) {
+                    groupedByDay[schedule.day] = [];
+                }
+                groupedByDay[schedule.day].push(schedule);
+            });
+
+            container.innerHTML = Object.keys(groupedByDay).map(day => {
+                const daySchedules = groupedByDay[day];
+                return `
+                    <div class="card">
+                        <h4 style="margin-bottom: 15px; color: var(--primary-color);">${day}</h4>
+                        ${daySchedules.map(s => `
+                            <div class="schedule-item" style="background: var(--primary-color); margin-bottom: 10px;">
+                                <strong>${s.subject}</strong><br>
+                                <small>🏫 ${s.class} • 📍 ${s.room}</small><br>
+                                <small>👨‍🏫 ${s.teacher}</small><br>
+                                <small>⏰ ${s.startTime} - ${s.endTime}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Thêm lịch học';
+            document.getElementById('isEditMode').value = 'false';
+            Utils.resetForm('scheduleForm');
+            Utils.openModal('scheduleModal');
+        }
+
+        function openEditModal(scheduleId) {
+            const schedules = Storage.getSchedules() || [];
+            const schedule = schedules.find(s => s.id === scheduleId);
+            
+            if (!schedule) {
+                Utils.showAlert('Không tìm thấy lịch học!', 'error');
+                return;
+            }
+
+            currentEditId = scheduleId;
+            document.getElementById('modalTitle').textContent = 'Sửa lịch học';
+            document.getElementById('isEditMode').value = 'true';
+            
+            document.getElementById('class').value = schedule.class;
+            document.getElementById('subject').value = schedule.subject;
+            document.getElementById('teacher').value = schedule.teacher;
+            document.getElementById('room').value = schedule.room;
+            document.getElementById('day').value = schedule.day;
+            document.getElementById('startTime').value = schedule.startTime;
+            document.getElementById('endTime').value = schedule.endTime;
+
+            Utils.openModal('scheduleModal');
+        }
+
+        function closeScheduleModal() {
+            Utils.closeModal('scheduleModal');
+            Utils.resetForm('scheduleForm');
+            currentEditId = null;
+        }
+
+        document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const isEdit = document.getElementById('isEditMode').value === 'true';
+
+            const formData = {
+                id: isEdit ? currentEditId : Storage.generateId('TKB'),
+                class: document.getElementById('class').value.trim(),
+                subject: document.getElementById('subject').value.trim(),
+                teacher: document.getElementById('teacher').value.trim(),
+                room: document.getElementById('room').value.trim(),
+                day: document.getElementById('day').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value
+            };
+
+            const validation = Validation.validateScheduleForm(formData);
+            if (!validation.isValid) {
+                Utils.showAlert(validation.errors.join('<br>'), 'error');
+                return;
+            }
+
+            if (isEdit) {
+                Storage.updateSchedule(currentEditId, formData);
+                Utils.showAlert('Cập nhật lịch học thành công!', 'success');
+            } else {
+                Storage.addSchedule(formData);
+                Utils.showAlert('Thêm lịch học thành công!', 'success');
+            }
+
+            closeScheduleModal();
+            loadSchedules();
+        });
+
+        function deleteSchedule(scheduleId) {
+            if (!Utils.confirm('Bạn có chắc muốn xóa lịch học này?')) return;
+            
+            Storage.deleteSchedule(scheduleId);
+            Utils.showAlert('Đã xóa lịch học!', 'success');
+            loadSchedules();
+        }
+
+        function handleLogout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) Auth.logout();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('scheduleModal');
+            if (event.target === modal) closeScheduleModal();
+        };
+
+        // Toggle Sidebar for Mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking overlay
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            toggleSidebar();
+        });
+
+        // Close sidebar when clicking a menu item on mobile
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.addEventListener('click', function() {
+                    const sidebar = document.querySelector('.sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            });
+        }
+    </script>
+</body>
+</html>

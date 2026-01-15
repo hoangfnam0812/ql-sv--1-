@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Hệ thống Quản lý Sinh viên</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <h3>🎓 QLSV</h3>
+                <p>Quản lý Sinh viên</p>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="./dashboard.html" class="active" style="font-weight: bold;">
+                        <span></span> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="./students.html">
+                        <span></span> Quản lý Sinh viên
+                    </a>
+                </li>
+                <li>
+                    <a href="./grades.html">
+                        <span></span> Quản lý Điểm
+                    </a>
+                </li>
+                <li>
+                    <a href="./announcements.html">
+                        <span></span> Thông báo
+                    </a>
+                </li>
+                <li>
+                    <a href="./schedules.html">
+                        <span></span> Thời khóa biểu
+                    </a>
+                </li>
+                <li>
+                    <a href="./accounts.html">
+                        <span></span> Quản lý Tài khoản
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+                        ☰
+                    </button>
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span class="user-name" id="userName">Admin</span>
+                    </div>
+                    <button class="btn-logout" onclick="handleLogout()">Đăng xuất</button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Statistics Cards -->
+                <div class="cards-grid">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <span class="card-title">Tổng sinh viên</span>
+                            <span class="card-icon">👥</span>
+                        </div>
+                        <div class="card-value" id="totalStudents">0</div>
+                    </div>
+
+                    <div class="card card-success">
+                        <div class="card-header">
+                            <span class="card-title">Sinh viên hoạt động</span>
+                            <span class="card-icon">✅</span>
+                        </div>
+                        <div class="card-value" id="activeStudents">0</div>
+                    </div>
+
+                    <div class="card card-warning">
+                        <div class="card-header">
+                            <span class="card-title">Thông báo mới</span>
+                            <span class="card-icon">📢</span>
+                        </div>
+                        <div class="card-value" id="totalAnnouncements">0</div>
+                    </div>
+
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <span class="card-title">Lớp học</span>
+                            <span class="card-icon">🏫</span>
+                        </div>
+                        <div class="card-value" id="totalClasses">0</div>
+                    </div>
+                </div>
+
+                <!-- Recent Students & Announcements -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                    <!-- Recent Students -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Sinh viên mới nhất</h3>
+                            <a href="./students.html" class="btn btn-sm btn-primary">Xem tất cả</a>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã SV</th>
+                                    <th>Họ tên</th>
+                                    <th>Lớp</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentStudents">
+                                <tr>
+                                    <td colspan="4" class="text-center">Đang tải...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Recent Announcements -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Thông báo mới</h3>
+                            <a href="./announcements.html" class="btn btn-sm btn-primary">Xem tất cả</a>
+                        </div>
+                        <ul class="notification-list" id="recentAnnouncements">
+                            <li class="empty-state">Đang tải...</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Today's Schedule -->
+                <div class="table-container mt-3">
+                    <div class="table-header">
+                        <h3>📅 Lịch học hôm nay</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Lớp</th>
+                                <th>Môn học</th>
+                                <th>Giảng viên</th>
+                                <th>Phòng</th>
+                                <th>Thời gian</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todaySchedule">
+                            <tr>
+                                <td colspan="5" class="text-center">Đang tải...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../js/storage.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        // Kiểm tra đăng nhập
+        if (!Auth.requireAuth()) {
+            window.location.href = '../index.html';
+        }
+
+        // Load dữ liệu khi trang load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadStatistics();
+            loadRecentStudents();
+            loadRecentAnnouncements();
+            loadTodaySchedule();
+        });
+
+        // Load thông tin user
+        function loadUserInfo() {
+            const user = Auth.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.fullName;
+                document.getElementById('userAvatar').textContent = user.fullName.charAt(0).toUpperCase();
+            }
+        }
+
+        // Load thống kê
+        function loadStatistics() {
+            const students = Storage.getStudents() || [];
+            const announcements = Storage.getAnnouncements() || [];
+            
+            // Tổng sinh viên
+            document.getElementById('totalStudents').textContent = students.length;
+            
+            // Sinh viên hoạt động
+            const activeStudents = students.filter(s => s.status === 'active').length;
+            document.getElementById('activeStudents').textContent = activeStudents;
+            
+            // Thông báo
+            document.getElementById('totalAnnouncements').textContent = announcements.length;
+            
+            // Số lớp (unique classes)
+            const classes = [...new Set(students.map(s => s.class).filter(c => c))];
+            document.getElementById('totalClasses').textContent = classes.length;
+        }
+
+        // Load sinh viên mới nhất
+        function loadRecentStudents() {
+            const students = Storage.getStudents() || [];
+            const recentStudents = students.slice(-5).reverse();
+            
+            const tbody = document.getElementById('recentStudents');
+            
+            if (recentStudents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center">Chưa có sinh viên nào</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = recentStudents.map(student => `
+                <tr>
+                    <td>${student.id}</td>
+                    <td>${student.fullName}</td>
+                    <td>${student.class || '-'}</td>
+                    <td>
+                        <span class="badge ${student.status === 'active' ? 'badge-success' : 'badge-danger'}">
+                            ${student.status === 'active' ? 'Hoạt động' : 'Khóa'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Load thông báo mới
+        function loadRecentAnnouncements() {
+            const announcements = Storage.getAnnouncements() || [];
+            const recentAnnouncements = announcements.slice(-5).reverse();
+            
+            const container = document.getElementById('recentAnnouncements');
+            
+            if (recentAnnouncements.length === 0) {
+                container.innerHTML = '<li class="empty-state">Chưa có thông báo nào</li>';
+                return;
+            }
+            
+            container.innerHTML = recentAnnouncements.map(announcement => `
+                <li class="notification-item ${announcement.priority === 'high' ? 'important' : ''}">
+                    <div class="notification-title">${announcement.title}</div>
+                    <div class="notification-date">
+                        ${Utils.formatDate(announcement.date)} • ${announcement.author}
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        // Load lịch học hôm nay
+        function loadTodaySchedule() {
+            const schedules = Storage.getSchedules() || [];
+            const today = Utils.getDayOfWeek(new Date());
+            const todaySchedules = schedules.filter(s => s.day === today);
+            
+            const tbody = document.getElementById('todaySchedule');
+            
+            if (todaySchedules.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">Không có lịch học hôm nay</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = todaySchedules.map(schedule => `
+                <tr>
+                    <td>${schedule.class}</td>
+                    <td>${schedule.subject}</td>
+                    <td>${schedule.teacher}</td>
+                    <td>${schedule.room}</td>
+                    <td>${schedule.startTime} - ${schedule.endTime}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Đăng xuất
+        function handleLogout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                Auth.logout();
+            }
+        }
+
+        // Toggle Sidebar for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking overlay
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            toggleSidebar();
+        });
+
+        // Close sidebar when clicking a menu item on mobile
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.addEventListener('click', function() {
+                    const sidebar = document.getElementById('sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            });
+        }
+    </script>
+</body>
+</html>

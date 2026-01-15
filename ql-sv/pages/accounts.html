@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Tài khoản - Hệ thống QLSV</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h3>🎓 QLSV</h3>
+                <p>Quản lý Sinh viên</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="./dashboard.html"><span></span> Dashboard</a></li>
+                <li><a href="./students.html"><span></span> Quản lý Sinh viên</a></li>
+                <li><a href="./grades.html"><span></span> Quản lý Điểm</a></li>
+                <li><a href="./announcements.html"><span></span> Thông báo</a></li>
+                <li><a href="./schedules.html"><span></span> Thời khóa biểu</a></li>
+                <li><a href="./accounts.html" class="active" style="font-weight: bold;"><span></span> Quản lý Tài khoản</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+                        ☰
+                    </button>
+                    <h2>Quản lý Tài khoản</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span class="user-name" id="userName">Admin</span>
+                    </div>
+                    <button class="btn-logout" onclick="handleLogout()">Đăng xuất</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Danh sách tài khoản</h3>
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Tìm kiếm tài khoản...">
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Họ tên</th>
+                                <th>Email</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountsTableBody">
+                            <tr><td colspan="6" class="text-center">Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Reset Password -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Reset mật khẩu</h3>
+                <button class="close-modal" onclick="closeResetModal()">×</button>
+            </div>
+
+            <form id="resetPasswordForm">
+                <input type="hidden" id="resetUserId">
+                
+                <div class="form-group">
+                    <label for="newPassword">Mật khẩu mới *</label>
+                    <input type="text" id="newPassword" value="123456" required>
+                </div>
+
+                <p style="color: #858796; font-size: 14px; margin: 15px 0;">
+                    ℹ️ Mật khẩu mặc định là "123456". Bạn có thể thay đổi trước khi reset.
+                </p>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeResetModal()">Hủy</button>
+                    <button type="submit" class="btn btn-warning">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        if (!Auth.requireAdmin()) {
+            window.location.href = './dashboard.html';
+        }
+
+        let allUsers = [];
+
+        window.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadAccounts();
+            document.getElementById('searchInput').addEventListener('input', Utils.debounce(handleSearch, 300));
+        });
+
+        function loadUserInfo() {
+            const user = Auth.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.fullName;
+                document.getElementById('userAvatar').textContent = user.fullName.charAt(0).toUpperCase();
+            }
+        }
+
+        function loadAccounts() {
+            allUsers = Storage.getUsers() || [];
+            renderAccounts(allUsers);
+        }
+
+        function renderAccounts(users) {
+            const tbody = document.getElementById('accountsTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Không có tài khoản nào</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.fullName}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge ${user.role === 'admin' ? 'badge-danger' : 'badge-info'}">
+                            ${user.role === 'admin' ? '👑 Admin' : '👤 Sinh viên'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${user.status === 'active' ? 'badge-success' : 'badge-danger'}">
+                            ${user.status === 'active' ? '✅ Hoạt động' : '🔒 Khóa'}
+                        </span>
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning" onclick="openResetModal('${user.id}')" 
+                            ${user.id === 'admin' ? 'disabled' : ''}>
+                            🔑 Reset
+                        </button>
+                        <button class="btn btn-sm ${user.status === 'active' ? 'btn-danger' : 'btn-success'}" 
+                            onclick="toggleStatus('${user.id}')"
+                            ${user.id === 'admin' ? 'disabled' : ''}>
+                            ${user.status === 'active' ? '🔒 Khóa' : '🔓 Mở'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const filtered = Utils.searchArray(allUsers, searchTerm, ['id', 'fullName', 'email']);
+            renderAccounts(filtered);
+        }
+
+        function openResetModal(userId) {
+            document.getElementById('resetUserId').value = userId;
+            document.getElementById('newPassword').value = '123456';
+            Utils.openModal('resetPasswordModal');
+        }
+
+        function closeResetModal() {
+            Utils.closeModal('resetPasswordModal');
+            Utils.resetForm('resetPasswordForm');
+        }
+
+        document.getElementById('resetPasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const userId = document.getElementById('resetUserId').value;
+            const newPassword = document.getElementById('newPassword').value.trim();
+
+            if (!newPassword || newPassword.length < 6) {
+                Utils.showAlert('Mật khẩu phải có ít nhất 6 ký tự!', 'error');
+                return;
+            }
+
+            const result = Auth.resetPassword(userId, newPassword);
+            
+            if (result.success) {
+                Utils.showAlert(result.message, 'success');
+                closeResetModal();
+            } else {
+                Utils.showAlert(result.message, 'error');
+            }
+        });
+
+        function toggleStatus(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            const action = user.status === 'active' ? 'khóa' : 'mở khóa';
+            
+            if (!Utils.confirm(`Bạn có chắc muốn ${action} tài khoản này?`)) return;
+
+            const result = Auth.toggleUserStatus(userId);
+            
+            if (result.success) {
+                Utils.showAlert(result.message, 'success');
+                loadAccounts();
+            } else {
+                Utils.showAlert(result.message, 'error');
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) Auth.logout();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('resetPasswordModal');
+            if (event.target === modal) closeResetModal();
+        };
+
+        // Toggle Sidebar for Mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking overlay
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            toggleSidebar();
+        });
+
+        // Close sidebar when clicking a menu item on mobile
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.addEventListener('click', function() {
+                    const sidebar = document.querySelector('.sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            });
+        }
+    </script>
+</body>
+</html>

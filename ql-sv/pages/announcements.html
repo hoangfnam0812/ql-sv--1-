@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Thông báo - Hệ thống QLSV</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h3>🎓 QLSV</h3>
+                <p>Quản lý Sinh viên</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="./dashboard.html"><span></span> Dashboard</a></li>
+                <li><a href="./students.html"><span></span> Quản lý Sinh viên</a></li>
+                <li><a href="./grades.html"><span></span> Quản lý Điểm</a></li>
+                <li><a href="./announcements.html" class="active" style="font-weight: bold;"><span></span> Thông báo</a></li>
+                <li><a href="./schedules.html"><span></span> Thời khóa biểu</a></li>
+                <li><a href="./accounts.html"><span></span> Quản lý Tài khoản</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+                        ☰
+                    </button>
+                    <h2>Quản lý Thông báo</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span class="user-name" id="userName">Admin</span>
+                    </div>
+                    <button class="btn-logout" onclick="handleLogout()">Đăng xuất</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Danh sách thông báo</h3>
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Tìm kiếm thông báo...">
+                            <button class="btn btn-primary" onclick="openAddModal()"> Thêm thông báo</button>
+                        </div>
+                    </div>
+
+                    <ul class="notification-list" id="announcementsList">
+                        <li class="empty-state">Đang tải...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Thông báo -->
+    <div id="announcementModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm thông báo</h3>
+                <button class="close-modal" onclick="closeAnnouncementModal()">×</button>
+            </div>
+
+            <form id="announcementForm">
+                <input type="hidden" id="announcementIdHidden">
+                <input type="hidden" id="isEditMode" value="false">
+
+                <div class="form-group">
+                    <label for="title">Tiêu đề *</label>
+                    <input type="text" id="title" placeholder="Nhập tiêu đề thông báo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">Nội dung *</label>
+                    <textarea id="content" rows="5" placeholder="Nhập nội dung thông báo" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Ngày đăng *</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority">Mức độ ưu tiên</label>
+                    <select id="priority">
+                        <option value="normal">Bình thường</option>
+                        <option value="high">Quan trọng</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeAnnouncementModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        if (!Auth.requireAuth()) window.location.href = '../index.html';
+
+        let allAnnouncements = [];
+        let currentEditId = null;
+
+        window.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadAnnouncements();
+            document.getElementById('date').value = Utils.getTodayDate();
+            document.getElementById('searchInput').addEventListener('input', Utils.debounce(handleSearch, 300));
+        });
+
+        function loadUserInfo() {
+            const user = Auth.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.fullName;
+                document.getElementById('userAvatar').textContent = user.fullName.charAt(0).toUpperCase();
+            }
+        }
+
+        function loadAnnouncements() {
+            allAnnouncements = Storage.getAnnouncements() || [];
+            renderAnnouncements(allAnnouncements);
+        }
+
+        function renderAnnouncements(announcements) {
+            const container = document.getElementById('announcementsList');
+            
+            if (announcements.length === 0) {
+                container.innerHTML = '<li class="empty-state">Chưa có thông báo nào</li>';
+                return;
+            }
+
+            // Sắp xếp theo ngày mới nhất
+            const sorted = [...announcements].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = sorted.map(announcement => `
+                <li class="notification-item ${announcement.priority === 'high' ? 'important' : ''}">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div class="notification-title">
+                                ${announcement.priority === 'high' ? '⚠️ ' : ''}${announcement.title}
+                            </div>
+                            <p style="margin: 10px 0; color: #5a5c69;">${announcement.content}</p>
+                            <div class="notification-date">
+                                📅 ${Utils.formatDate(announcement.date)} • ✍️ ${announcement.author}
+                            </div>
+                        </div>
+                        <div class="action-buttons" style="margin-left: 15px;">
+                            <button class="btn btn-sm btn-warning" onclick="openEditModal('${announcement.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${announcement.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const filtered = Utils.searchArray(allAnnouncements, searchTerm, ['title', 'content', 'author']);
+            renderAnnouncements(filtered);
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Thêm thông báo';
+            document.getElementById('isEditMode').value = 'false';
+            Utils.resetForm('announcementForm');
+            document.getElementById('date').value = Utils.getTodayDate();
+            Utils.openModal('announcementModal');
+        }
+
+        function openEditModal(announcementId) {
+            const announcements = Storage.getAnnouncements() || [];
+            const announcement = announcements.find(a => a.id === announcementId);
+            
+            if (!announcement) {
+                Utils.showAlert('Không tìm thấy thông báo!', 'error');
+                return;
+            }
+
+            currentEditId = announcementId;
+            document.getElementById('modalTitle').textContent = 'Sửa thông báo';
+            document.getElementById('isEditMode').value = 'true';
+            
+            document.getElementById('title').value = announcement.title;
+            document.getElementById('content').value = announcement.content;
+            document.getElementById('date').value = announcement.date;
+            document.getElementById('priority').value = announcement.priority;
+
+            Utils.openModal('announcementModal');
+        }
+
+        function closeAnnouncementModal() {
+            Utils.closeModal('announcementModal');
+            Utils.resetForm('announcementForm');
+            currentEditId = null;
+        }
+
+        document.getElementById('announcementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const isEdit = document.getElementById('isEditMode').value === 'true';
+            const user = Auth.getCurrentUser();
+
+            const formData = {
+                id: isEdit ? currentEditId : Storage.generateId('TB'),
+                title: document.getElementById('title').value.trim(),
+                content: document.getElementById('content').value.trim(),
+                date: document.getElementById('date').value,
+                priority: document.getElementById('priority').value,
+                author: user.fullName
+            };
+
+            const validation = Validation.validateAnnouncementForm(formData);
+            if (!validation.isValid) {
+                Utils.showAlert(validation.errors.join('<br>'), 'error');
+                return;
+            }
+
+            if (isEdit) {
+                Storage.updateAnnouncement(currentEditId, formData);
+                Utils.showAlert('Cập nhật thông báo thành công!', 'success');
+            } else {
+                Storage.addAnnouncement(formData);
+                Utils.showAlert('Thêm thông báo thành công!', 'success');
+            }
+
+            closeAnnouncementModal();
+            loadAnnouncements();
+        });
+
+        function deleteAnnouncement(announcementId) {
+            if (!Utils.confirm('Bạn có chắc muốn xóa thông báo này?')) return;
+            
+            Storage.deleteAnnouncement(announcementId);
+            Utils.showAlert('Đã xóa thông báo!', 'success');
+            loadAnnouncements();
+        }
+
+        function handleLogout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) Auth.logout();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('announcementModal');
+            if (event.target === modal) closeAnnouncementModal();
+        };
+
+        // Toggle Sidebar for Mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking overlay
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            toggleSidebar();
+        });
+
+        // Close sidebar when clicking a menu item on mobile
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.addEventListener('click', function() {
+                    const sidebar = document.querySelector('.sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            });
+        }
+    </script>
+</body>
+</html>

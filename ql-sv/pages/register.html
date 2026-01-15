@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Hệ thống Quản lý Sinh viên</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>📝 Đăng Ký Tài Khoản</h2>
+            <p>Tạo tài khoản sinh viên mới</p>
+            
+            <div id="alertMessage" class="alert"></div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="studentId">Mã sinh viên *</label>
+                    <input 
+                        type="text" 
+                        id="studentId" 
+                        name="studentId" 
+                        placeholder="VD: SV001"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">Họ và tên *</label>
+                    <input 
+                        type="text" 
+                        id="fullName" 
+                        name="fullName" 
+                        placeholder="Nguyễn Văn A"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="example@student.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Số điện thoại</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone" 
+                        placeholder="0123456789"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">Giới tính</label>
+                    <select id="gender" name="gender">
+                        <option value="">-- Chọn giới tính --</option>
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="dateOfBirth">Ngày sinh</label>
+                    <input 
+                        type="date" 
+                        id="dateOfBirth" 
+                        name="dateOfBirth"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Địa chỉ</label>
+                    <input 
+                        type="text" 
+                        id="address" 
+                        name="address" 
+                        placeholder="Nhập địa chỉ"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="major">Ngành học</label>
+                    <input 
+                        type="text" 
+                        id="major" 
+                        name="major" 
+                        placeholder="VD: Công nghệ thông tin"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="class">Lớp</label>
+                    <input 
+                        type="text" 
+                        id="class" 
+                        name="class" 
+                        placeholder="VD: IT01"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mật khẩu *</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Ít nhất 6 ký tự"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Xác nhận mật khẩu *</label>
+                    <input 
+                        type="password" 
+                        id="confirmPassword" 
+                        name="confirmPassword" 
+                        placeholder="Nhập lại mật khẩu"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Đăng ký
+                </button>
+            </form>
+
+            <div class="auth-link">
+                Đã có tài khoản? <a href="../index.html">Đăng nhập ngay</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../js/storage.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        // Kiểm tra nếu đã đăng nhập thì chuyển đến dashboard
+        if (Auth.isAuthenticated()) {
+            window.location.href = './dashboard.html';
+        }
+
+        // Xử lý form đăng ký
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Lấy dữ liệu form
+            const formData = {
+                studentId: document.getElementById('studentId').value.trim().toUpperCase(),
+                fullName: document.getElementById('fullName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                gender: document.getElementById('gender').value,
+                dateOfBirth: document.getElementById('dateOfBirth').value,
+                address: document.getElementById('address').value.trim(),
+                major: document.getElementById('major').value.trim(),
+                class: document.getElementById('class').value.trim(),
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirmPassword').value
+            };
+
+            // Validate
+            const validation = Validation.validateRegisterForm(formData);
+            if (!validation.isValid) {
+                Utils.showAlert(validation.errors.join('<br>'), 'error');
+                return;
+            }
+
+            // Đăng ký
+            const result = Auth.register(formData);
+            
+            if (result.success) {
+                Utils.showAlert(result.message, 'success');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 2000);
+            } else {
+                Utils.showAlert(result.message, 'error');
+            }
+        });
+
+        // Tự động focus vào mã sinh viên
+        document.getElementById('studentId').focus();
+    </script>
+</body>
+</html>

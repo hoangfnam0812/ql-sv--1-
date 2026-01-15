@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Sinh viên - Hệ thống QLSV</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <h3>🎓 QLSV</h3>
+                <p>Quản lý Sinh viên</p>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="./dashboard.html">
+                        <span></span> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="./students.html" class="active" style="font-weight: bold;">
+                        <span></span> Quản lý Sinh viên
+                    </a>
+                </li>
+                <li>
+                    <a href="./grades.html">
+                        <span></span> Quản lý Điểm
+                    </a>
+                </li>
+                <li>
+                    <a href="./announcements.html">
+                        <span></span> Thông báo
+                    </a>
+                </li>
+                <li>
+                    <a href="./schedules.html">
+                        <span></span> Thời khóa biểu
+                    </a>
+                </li>
+                <li>
+                    <a href="./accounts.html">
+                        <span></span> Quản lý Tài khoản
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+                        ☰
+                    </button>
+                    <h2>Quản lý Sinh viên</h2>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span class="user-name" id="userName">Admin</span>
+                    </div>
+                    <button class="btn-logout" onclick="handleLogout()">Đăng xuất</button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Danh sách sinh viên</h3>
+                        <div class="search-box">
+                            <input 
+                                type="text" 
+                                id="searchInput" 
+                                placeholder="Tìm kiếm sinh viên..."
+                            >
+                            <button class="btn btn-primary" onclick="openAddModal()">
+                                    Thêm sinh viên
+                            </button>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã SV</th>
+                                <th>Họ tên</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Lớp</th>
+                                <th>Ngành</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center">Đang tải...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Sinh viên -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm sinh viên</h3>
+                <button class="close-modal" onclick="closeStudentModal()">×</button>
+            </div>
+
+            <form id="studentForm">
+                <input type="hidden" id="studentIdHidden">
+                <input type="hidden" id="isEditMode" value="false">
+
+                <div class="form-group">
+                    <label for="studentId">Mã sinh viên *</label>
+                    <input 
+                        type="text" 
+                        id="studentId" 
+                        placeholder="VD: SV001"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">Họ và tên *</label>
+                    <input 
+                        type="text" 
+                        id="fullName" 
+                        placeholder="Nguyễn Văn A"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        placeholder="example@student.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Số điện thoại</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        placeholder="0123456789"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">Giới tính</label>
+                    <select id="gender">
+                        <option value="">-- Chọn giới tính --</option>
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="dateOfBirth">Ngày sinh</label>
+                    <input type="date" id="dateOfBirth">
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Địa chỉ</label>
+                    <input type="text" id="address" placeholder="Nhập địa chỉ">
+                </div>
+
+                <div class="form-group">
+                    <label for="major">Ngành học</label>
+                    <input type="text" id="major" placeholder="VD: Công nghệ thông tin">
+                </div>
+
+                <div class="form-group">
+                    <label for="class">Lớp</label>
+                    <input type="text" id="class" placeholder="VD: IT01">
+                </div>
+
+                <div class="form-group">
+                    <label for="year">Năm học</label>
+                    <input type="text" id="year" placeholder="VD: 2024">
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Trạng thái</label>
+                    <select id="status">
+                        <option value="active">Hoạt động</option>
+                        <option value="inactive">Không hoạt động</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeStudentModal()">
+                        Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../js/storage.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        // Kiểm tra đăng nhập
+        if (!Auth.requireAuth()) {
+            window.location.href = '../index.html';
+        }
+
+        let allStudents = [];
+        let currentEditId = null;
+
+        // Load dữ liệu khi trang load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadStudents();
+
+            // Tìm kiếm
+            document.getElementById('searchInput').addEventListener('input', 
+                Utils.debounce(handleSearch, 300)
+            );
+        });
+
+        // Load thông tin user
+        function loadUserInfo() {
+            const user = Auth.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.fullName;
+                document.getElementById('userAvatar').textContent = user.fullName.charAt(0).toUpperCase();
+            }
+        }
+
+        // Load danh sách sinh viên
+        function loadStudents() {
+            allStudents = Storage.getStudents() || [];
+            renderStudents(allStudents);
+        }
+
+        // Hiển thị danh sách sinh viên
+        function renderStudents(students) {
+            const tbody = document.getElementById('studentsTableBody');
+
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Không có sinh viên nào</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = students.map(student => `
+                <tr>
+                    <td>${student.id}</td>
+                    <td>${student.fullName}</td>
+                    <td>${student.email}</td>
+                    <td>${student.phone || '-'}</td>
+                    <td>${student.class || '-'}</td>
+                    <td>${student.major || '-'}</td>
+                    <td>
+                        <span class="badge ${student.status === 'active' ? 'badge-success' : 'badge-danger'}">
+                            ${student.status === 'active' ? 'Hoạt động' : 'Khóa'}
+                        </span>
+                    </td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm btn-warning" onclick="openEditModal('${student.id}')">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteStudent('${student.id}')">
+                            <i class="fa-solid fa-delete-left"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Tìm kiếm
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const filteredStudents = Utils.searchArray(allStudents, searchTerm, 
+                ['id', 'fullName', 'email', 'phone', 'class', 'major']
+            );
+            renderStudents(filteredStudents);
+        }
+
+        // Mở modal thêm
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Thêm sinh viên';
+            document.getElementById('isEditMode').value = 'false';
+            document.getElementById('studentId').disabled = false;
+            Utils.resetForm('studentForm');
+            Utils.openModal('studentModal');
+        }
+
+        // Mở modal sửa
+        function openEditModal(studentId) {
+            const student = Storage.getStudentById(studentId);
+            if (!student) {
+                Utils.showAlert('Không tìm thấy sinh viên!', 'error');
+                return;
+            }
+
+            currentEditId = studentId;
+            document.getElementById('modalTitle').textContent = 'Sửa thông tin sinh viên';
+            document.getElementById('isEditMode').value = 'true';
+            document.getElementById('studentIdHidden').value = studentId;
+            
+            // Điền dữ liệu vào form
+            document.getElementById('studentId').value = student.id;
+            document.getElementById('studentId').disabled = true;
+            document.getElementById('fullName').value = student.fullName;
+            document.getElementById('email').value = student.email;
+            document.getElementById('phone').value = student.phone || '';
+            document.getElementById('gender').value = student.gender || '';
+            document.getElementById('dateOfBirth').value = student.dateOfBirth || '';
+            document.getElementById('address').value = student.address || '';
+            document.getElementById('major').value = student.major || '';
+            document.getElementById('class').value = student.class || '';
+            document.getElementById('year').value = student.year || '';
+            document.getElementById('status').value = student.status || 'active';
+
+            Utils.openModal('studentModal');
+        }
+
+        // Đóng modal
+        function closeStudentModal() {
+            Utils.closeModal('studentModal');
+            Utils.resetForm('studentForm');
+            currentEditId = null;
+        }
+
+        // Submit form
+        document.getElementById('studentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const isEdit = document.getElementById('isEditMode').value === 'true';
+            
+            const formData = {
+                id: document.getElementById('studentId').value.trim().toUpperCase(),
+                fullName: document.getElementById('fullName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                gender: document.getElementById('gender').value,
+                dateOfBirth: document.getElementById('dateOfBirth').value,
+                address: document.getElementById('address').value.trim(),
+                major: document.getElementById('major').value.trim(),
+                class: document.getElementById('class').value.trim(),
+                year: document.getElementById('year').value.trim(),
+                status: document.getElementById('status').value
+            };
+
+            // Validate
+            const validation = Validation.validateStudentForm(formData);
+            if (!validation.isValid) {
+                Utils.showAlert(validation.errors.join('<br>'), 'error');
+                return;
+            }
+
+            if (isEdit) {
+                // Sửa sinh viên
+                const result = Storage.updateStudent(currentEditId, formData);
+                if (result) {
+                    Utils.showAlert('Cập nhật sinh viên thành công!', 'success');
+                    closeStudentModal();
+                    loadStudents();
+                } else {
+                    Utils.showAlert('Cập nhật thất bại!', 'error');
+                }
+            } else {
+                // Kiểm tra trùng mã sinh viên
+                if (Storage.getStudentById(formData.id)) {
+                    Utils.showAlert('Mã sinh viên đã tồn tại!', 'error');
+                    return;
+                }
+
+                // Thêm sinh viên
+                Storage.addStudent(formData);
+                Utils.showAlert('Thêm sinh viên thành công!', 'success');
+                closeStudentModal();
+                loadStudents();
+            }
+        });
+
+        // Xóa sinh viên
+        function deleteStudent(studentId) {
+            if (!Utils.confirm('Bạn có chắc muốn xóa sinh viên này?')) {
+                return;
+            }
+
+            Storage.deleteStudent(studentId);
+            Utils.showAlert('Đã xóa sinh viên!', 'success');
+            loadStudents();
+        }
+
+        // Đăng xuất
+        function handleLogout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                Auth.logout();
+            }
+        }
+
+        // Đóng modal khi click outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('studentModal');
+            if (event.target === modal) {
+                closeStudentModal();
+            }
+        };
+
+        // Toggle Sidebar for Mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close sidebar when clicking overlay
+        document.getElementById('sidebarOverlay').addEventListener('click', function() {
+            toggleSidebar();
+        });
+
+        // Close sidebar when clicking a menu item on mobile
+        if (window.innerWidth <= 768) {
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.addEventListener('click', function() {
+                    const sidebar = document.getElementById('sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            });
+        }
+    </script>
+</body>
+</html>

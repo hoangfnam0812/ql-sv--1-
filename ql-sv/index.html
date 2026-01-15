@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Hệ thống Quản lý Sinh viên</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>🎓 Đăng Nhập</h2>
+            <p>Hệ thống Quản lý Sinh viên</p>
+            
+            <div id="alertMessage" class="alert"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="Nhập email của bạn"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Nhập mật khẩu"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Đăng nhập
+                </button>
+            </form>
+
+            <div class="auth-link">
+                Chưa có tài khoản? <a href="./pages/register.html">Đăng ký ngay</a>
+            </div>
+
+            <div class="auth-link mt-2" style="padding-top: 20px; border-top: 1px solid #e3e6f0;">
+                <small style="color: #858796;">
+                    <strong>Tài khoản mẫu:</strong><br>
+                    Admin: admin@qlsv.com / admin123
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="./js/storage.js"></script>
+    <script src="./js/auth.js"></script>
+    <script src="./js/validation.js"></script>
+    <script src="./js/utils.js"></script>
+    <script>
+        // Kiểm tra nếu đã đăng nhập thì chuyển đến dashboard
+        if (Auth.isAuthenticated()) {
+            window.location.href = './pages/dashboard.html';
+        }
+
+        // Xử lý form đăng nhập
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Validate
+            const validation = Validation.validateLoginForm(email, password);
+            if (!validation.isValid) {
+                Utils.showAlert(validation.errors.join('<br>'), 'error');
+                return;
+            }
+
+            // Đăng nhập
+            const result = Auth.login(email, password);
+            
+            if (result.success) {
+                Utils.showAlert(result.message, 'success');
+                setTimeout(() => {
+                    window.location.href = './pages/dashboard.html';
+                }, 1000);
+            } else {
+                Utils.showAlert(result.message, 'error');
+            }
+        });
+
+        // Tự động focus vào email
+        document.getElementById('email').focus();
+    </script>
+</body>
+</html>
